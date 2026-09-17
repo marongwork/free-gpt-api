@@ -11,21 +11,21 @@ logger = logging.getLogger("prism_client")
 
 # Prism internal model mapping
 MODEL_MAPPING = {
-    "o1-astra-xhigh": "gpt-6-astra",
-    "01-astra-xhigh": "gpt-6-astra",
-    "astra-xhigh": "gpt-6-astra",
-    "o1-high": "gpt-6-astra",
-    "01-high": "gpt-6-astra",
-    "o3-high": "gpt-6-astra",
-    "03-high": "gpt-6-astra",
-    "o1": "gpt-6-astra",
-    "01": "gpt-6-astra",
-    "o1-preview": "gpt-6-astra",
-    "01-preview": "gpt-6-astra",
-    "gpt-6-astra": "gpt-6-astra",
+    "o1-astra-xhigh": "gpt-5.6-terra",
+    "01-astra-xhigh": "gpt-5.6-terra",
+    "astra-xhigh": "gpt-5.6-terra",
+    "o1-high": "gpt-5.6-terra",
+    "01-high": "gpt-5.6-terra",
+    "o3-high": "gpt-5.6-terra",
+    "03-high": "gpt-5.6-terra",
+    "o1": "gpt-5.6-terra",
+    "01": "gpt-5.6-terra",
+    "o1-preview": "gpt-5.6-terra",
+    "01-preview": "gpt-5.6-terra",
+    "gpt-6-astra": "gpt-5.6-terra",
     "gpt-5.6-terra": "gpt-5.6-terra",
     "gpt-5.6-sol": "gpt-5.6-sol",
-    "gpt-4o": "gpt-5.6-terra",
+    "gpt-4o": "gpt-4o",
     "gpt-5.2-prism": "gpt-5.6-terra",
 }
 
@@ -41,7 +41,7 @@ def map_model(model_name: Optional[str]) -> str:
         key = "o3" + key[2:]
         if key in MODEL_MAPPING:
             return MODEL_MAPPING[key]
-    return "gpt-6-astra"
+    return "gpt-5.6-terra"
 
 _GLOBAL_SANDBOX_CACHE: Dict[str, Any] = {}
 _SANDBOX_LOCK = asyncio.Lock()
@@ -286,7 +286,19 @@ class PrismClient:
         sb_url, sb_token = await self.ensure_sandbox_synced(client, project_id)
 
         user_id = self._cached_user_id or str(uuid.uuid4())
-        eff = (reasoning_effort or "high").strip().lower()
+        if not reasoning_effort:
+            model_lower = (model or "").lower()
+            if "xhigh" in model_lower:
+                eff = "xhigh"
+            elif "low" in model_lower:
+                eff = "low"
+            elif "preview" in model_lower or "medium" in model_lower:
+                eff = "medium"
+            else:
+                eff = "high"
+        else:
+            eff = reasoning_effort.strip().lower()
+
         if eff not in ("low", "medium", "high", "xhigh"):
             eff = "high"
 
@@ -311,6 +323,8 @@ class PrismClient:
 
         data = resp.json()
         logger.info(f"Prism inference started response keys: {list(data.keys())}, status: {data.get('status')}")
+        if data.get("response", {}).get("status") == "error":
+            logger.error(f"Prism response returned error: {data.get('response', {}).get('payload')}")
         return data
 
     async def poll_status(
