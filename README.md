@@ -1,7 +1,7 @@
-# ⚡️ Free-GPT-API · 零计费无限 GPT Token！满血 o1-astra / o3 高推理反代服务
+# ⚡️ Free-GPT-API · 零计费无限 GPT Token！满血 o1 / o3 高推理反代服务
 
-> **零 API 计费账单 · 无限 GPT Token 配额 · 直通 o1 / Astra xhigh 满血深度思考**
-> 
+> **零 API 计费账单 · 无限 GPT Token 配额 · 直通 o1 / o3 满血深度思考 · 四档思考强度自由调节**
+>
 > 将 OpenAI 内部科研平台 **Prism** 逆向转译为**标准 OpenAI `/v1/chat/completions` API**，让任意客户端即刻畅享不计费、无降智的高推理体验！
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -13,7 +13,8 @@
 ## 🌟 核心亮点
 
 - 💎 **无限 GPT Token 畅享**：基于 Prism 独立通道与专属额度池，**免除官方 API 昂贵的 Token 扣费**，告别月度账单焦虑，尽享高强度 AI 交互！
-- 🧠 **满血高思考深度**：直连底层 `o1-astra-xhigh`、`o3-high` 等高思考深度模型，思考链 (`reasoning_content`) 完整原汁原味透传，绝不降智。
+- 🧠 **满血高思考深度**：底层直连 `gpt-5.6-terra` 等高推理引擎，思考链 (`reasoning_content`) 完整原汁原味透传，绝不降智。
+- 🎛️ **四档思考强度自由调节**：通过 `reasoning_effort` 参数在 `low` / `medium` / `high` / `xhigh` 四档自由切换，平衡速度与深度。
 - 💬 **完整多轮上下文记忆**：内置智能上下文重构引擎，完美维持多轮对话历史，彻底告别单轮遗忘问题。
 - 🌊 **毫秒级极速流式**：原生支持 Server-Sent Events (SSE)，Nginx 零缓冲全双工逐字打字机推流，体验丝滑流畅。
 - 🔌 **全生态无缝兼容**：100% 遵循 OpenAI API 规范，无缝直接 **Cursor**、**NextChat**、**Cherry Studio**、**Chatbox**、**LibreChat**、**DSH (DeepSeek Harness)** 及官方 **Python/Node SDK**。
@@ -96,14 +97,17 @@ docker compose up -d --build
 - 打开设置 -> **Models** -> 开启 **OpenAI API Key**
 - **OpenAI Base URL**: `http://你的服务器IP/v1`
 - **OpenAI API Key**: 填入你在 `.env` 中设置的 `PROXY_API_KEY`（默认 `sk-prism-secret-2026`）
-- **Model Name**: 添加 `o1-astra-xhigh`
+- **Model Name**: 添加 `o1-astra-xhigh` 或 `01-astra-xhigh`
 
 ### 2. NextChat / Cherry Studio / Chatbox
 - **接口地址 (API Base URL)**: `http://你的服务器IP/v1`
 - **API Key**: `sk-prism-secret-2026`
-- **自定义模型**: 添加 `o1-astra-xhigh`、`o3-high`、`gpt-5.2-prism`
+- **自定义模型**: 添加 `o1-astra-xhigh`、`o3-high`、`gpt-4o`
 
 ### 3. Python 官方 SDK
+
+基础调用：
+
 ```python
 from openai import OpenAI
 
@@ -131,8 +135,21 @@ for chunk in response:
         print(delta.content, end="", flush=True)
 ```
 
+指定思考强度（`reasoning_effort`）：
+
+```python
+response = client.chat.completions.create(
+    model="o1-astra-xhigh",
+    messages=[{"role": "user", "content": "帮我写一个快速排序"}],
+    extra_body={"reasoning_effort": "high"},  # low / medium / high / xhigh
+    stream=True
+)
+```
+
 ### 4. cURL 测试
+
 ```bash
+# 普通调用
 curl http://你的服务器IP/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-prism-secret-2026" \
@@ -143,19 +160,62 @@ curl http://你的服务器IP/v1/chat/completions \
     ],
     "stream": false
   }'
+
+# 指定思考强度
+curl http://你的服务器IP/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-prism-secret-2026" \
+  -d '{
+    "model": "o1-astra-xhigh",
+    "reasoning_effort": "xhigh",
+    "messages": [
+      {"role": "user", "content": "证明黎曼假设"}
+    ],
+    "stream": true
+  }'
 ```
+
+### 5. DSH (DeepSeek Harness) Web UI
+
+在 `~/.dsh/settings.yaml` 中添加 provider 配置：
+
+```yaml
+providers:
+  - name: prism
+    baseUrl: https://你的域名/v1
+    apiKey: sk-prism-secret-2026
+    models:
+      - id: o1-astra-xhigh
+        reasoningEfforts: [low, medium, high, xhigh]
+      - id: 01-astra-xhigh
+        reasoningEfforts: [low, medium, high, xhigh]
+      - id: o1-high
+        reasoningEfforts: [low, medium, high, xhigh]
+      - id: o3-high
+        reasoningEfforts: [low, medium, high, xhigh]
+      - id: gpt-4o
+```
+
+配置完成后，DSH UI 将在推理模型旁显示思考强度调节滑块，可在 `low` → `xhigh` 之间实时切换。
 
 ---
 
 ## 📋 支持模型列表
 
-| 客户端请求模型名 | 映射底层模型 | 特性说明 |
-|---|---|---|
-| `o1-astra-xhigh` | `gpt-6-astra` | **默认**，满血 Astra 极高推理深度，带完整思考链 |
-| `o1-high` | `gpt-6-astra` | 高推理深度，兼顾长逻辑与复杂推理 |
-| `o3-high` | `gpt-6-astra` | o3 架构深度思考模式 |
-| `gpt-5.2-prism` | `gpt-5.6-terra` | 超长上下文综合生成模型 |
-| `gpt-4o` | `gpt-5.6-terra` | 极速日常对话与代码生成 |
+| 客户端请求模型名 | 映射底层引擎 | 思考强度支持 | 特性说明 |
+|---|---|---|---|
+| `o1-astra-xhigh` | `gpt-5.6-terra` | ✅ low/medium/high/xhigh | **默认推荐**，满血极高推理深度，完整思考链 |
+| `01-astra-xhigh` | `gpt-5.6-terra` | ✅ | 同上，数字前缀兼容别名 |
+| `o1-high` | `gpt-5.6-terra` | ✅ | 高推理深度，兼顾逻辑与复杂推理 |
+| `01-high` | `gpt-5.6-terra` | ✅ | 同上，数字前缀兼容别名 |
+| `o3-high` | `gpt-5.6-terra` | ✅ | o3 架构深度思考模式 |
+| `03-high` | `gpt-5.6-terra` | ✅ | 同上，数字前缀兼容别名 |
+| `o1` | `gpt-5.6-terra` | ✅ | 标准 o1 入口 |
+| `o1-preview` | `gpt-5.6-terra` | ✅ low | 预览档，默认 low effort |
+| `gpt-5.2-prism` | `gpt-5.6-terra` | ❌ | 超长上下文综合生成模型 |
+| `gpt-4o` | `gpt-4o` | ❌ | 极速日常对话与代码生成 |
+
+> **注意**：模型名支持 `o` 和 `0`（数字零）前缀互换，例如 `o1-high` 和 `01-high` 等价。
 
 ---
 
