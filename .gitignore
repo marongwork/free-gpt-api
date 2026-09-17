@@ -1,0 +1,39 @@
+# Secrets & Environment Variables (NEVER commit credentials)
+.env
+*.env
+!.env.example
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+
+# OS Artifacts
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Archives & Packaging
+*.tar.gz
+*.tar
+*.zip
+dist/
+build/
+*.egg-info/
+
+# Logs
+*.log
+logs/

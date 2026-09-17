@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  prism-proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prism-proxy
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./app:/app/app
+    expose:
+      - "8000"
+    ports:
+      - "127.0.0.1:8000:8000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    container_name: prism-nginx
+    restart: always
+    profiles:
+      - standalone
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - prism-proxy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
