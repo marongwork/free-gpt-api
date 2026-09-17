@@ -24,8 +24,8 @@ MODEL_MAPPING = {
     "01-preview": "gpt-5.6-terra",
     "gpt-6-astra": "gpt-5.6-terra",
     "gpt-5.6-terra": "gpt-5.6-terra",
-    "gpt-5.6-sol": "gpt-5.6-sol",
-    "gpt-4o": "gpt-4o",
+    "gpt-5.6-sol": "gpt-5.6-terra",
+    "gpt-4o": "gpt-5.6-terra",
     "gpt-5.2-prism": "gpt-5.6-terra",
 }
 
