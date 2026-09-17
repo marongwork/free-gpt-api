@@ -198,26 +198,57 @@ class PrismClient:
             return clean_url, sb_token
 
     def _convert_messages(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """将 OpenAI messages 格式转换为 Prism input 格式"""
-        input_items = []
-        for m in messages:
-            role = m.get("role", "user")
-            content = m.get("content", "")
+        """
+        将 OpenAI messages 列表转换为 Prism 能够理解的完整多轮上下文输入。
+        由于 Prism 底层作为单轮任务执行，直接传入带有 assistant 角色的消息会被 Prism 忽略或导致上下文丢失。
+        因此，对于多轮对话，需要将历史对话记录合并注入到当前请求的 Prompt 中。
+        """
+        if not messages:
+            return []
+
+        def get_text(content: Any) -> str:
             if isinstance(content, list):
                 text_parts = [p.get("text", "") for p in content if isinstance(p, dict) and p.get("type") == "text"]
-                content_str = "\n".join(text_parts)
-            else:
-                content_str = str(content)
+                return "\n".join(text_parts)
+            return str(content or "")
 
-            if role not in ("user", "assistant", "system"):
-                role = "user"
-
-            input_items.append({
+        if len(messages) == 1:
+            content_str = get_text(messages[0].get("content", ""))
+            return [{
                 "type": "message",
-                "role": role,
+                "role": "user",
                 "content": [{"type": "input_text", "text": content_str}]
-            })
-        return input_items
+            }]
+
+        history_lines = []
+        for m in messages[:-1]:
+            role = m.get("role", "user").lower()
+            c_str = get_text(m.get("content", "")).strip()
+            if not c_str:
+                continue
+            if role == "system":
+                history_lines.append(f"[System Instruction]\n{c_str}")
+            elif role == "assistant":
+                history_lines.append(f"[Assistant]\n{c_str}")
+            else:
+                history_lines.append(f"[User]\n{c_str}")
+
+        last_content = get_text(messages[-1].get("content", ""))
+        if history_lines:
+            combined_prompt = (
+                "[Conversation History]\n"
+                + "\n\n".join(history_lines)
+                + "\n\n[Current User Message]\n"
+                + last_content
+            )
+        else:
+            combined_prompt = last_content
+
+        return [{
+            "type": "message",
+            "role": "user",
+            "content": [{"type": "input_text", "text": combined_prompt}]
+        }]
 
     async def start_inference(
         self,
