@@ -93,7 +93,7 @@ async def chat_completions(
     model = req.model or settings.DEFAULT_MODEL
     messages_dicts = [m.model_dump() for m in req.messages]
 
-    logger.info(f"Incoming chat completion request: model={model}, messages_count={len(messages_dicts)}, stream={req.stream}")
+    logger.info(f"Incoming chat completion request: model={model}, reasoning_effort={req.reasoning_effort}, messages_count={len(messages_dicts)}, stream={req.stream}")
 
     if req.stream:
         # 流式返回 (SSE)
@@ -101,7 +101,8 @@ async def chat_completions(
             prism_client=prism_client,
             messages=messages_dicts,
             model=model,
-            tools=req.tools
+            tools=req.tools,
+            reasoning_effort=req.reasoning_effort
         )
         return StreamingResponse(
             response_generator,
@@ -119,6 +120,7 @@ async def chat_completions(
             prism_client=prism_client,
             messages=messages_dicts,
             model=model,
-            tools=req.tools
+            tools=req.tools,
+            reasoning_effort=req.reasoning_effort
         )
         return res

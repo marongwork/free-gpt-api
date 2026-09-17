@@ -12,17 +12,36 @@ logger = logging.getLogger("prism_client")
 # Prism internal model mapping
 MODEL_MAPPING = {
     "o1-astra-xhigh": "gpt-6-astra",
+    "01-astra-xhigh": "gpt-6-astra",
     "astra-xhigh": "gpt-6-astra",
     "o1-high": "gpt-6-astra",
+    "01-high": "gpt-6-astra",
     "o3-high": "gpt-6-astra",
+    "03-high": "gpt-6-astra",
     "o1": "gpt-6-astra",
+    "01": "gpt-6-astra",
     "o1-preview": "gpt-6-astra",
+    "01-preview": "gpt-6-astra",
     "gpt-6-astra": "gpt-6-astra",
     "gpt-5.6-terra": "gpt-5.6-terra",
     "gpt-5.6-sol": "gpt-5.6-sol",
     "gpt-4o": "gpt-5.6-terra",
     "gpt-5.2-prism": "gpt-5.6-terra",
 }
+
+def map_model(model_name: Optional[str]) -> str:
+    key = (model_name or "").strip().lower()
+    if key in MODEL_MAPPING:
+        return MODEL_MAPPING[key]
+    if key.startswith("01"):
+        key = "o1" + key[2:]
+        if key in MODEL_MAPPING:
+            return MODEL_MAPPING[key]
+    if key.startswith("03"):
+        key = "o3" + key[2:]
+        if key in MODEL_MAPPING:
+            return MODEL_MAPPING[key]
+    return "gpt-6-astra"
 
 _GLOBAL_SANDBOX_CACHE: Dict[str, Any] = {}
 _SANDBOX_LOCK = asyncio.Lock()
@@ -256,23 +275,28 @@ class PrismClient:
         project_id: str,
         messages: List[Dict[str, Any]],
         model: str,
-        tools: Optional[List[Dict[str, Any]]] = None
+        tools: Optional[List[Dict[str, Any]]] = None,
+        reasoning_effort: Optional[str] = None
     ) -> Dict[str, Any]:
         """发起 AI 推理任务 (POST /api/llm/response_with_tools_start)"""
         url = f"{self.base_url}/api/llm/response_with_tools_start"
         input_items = self._convert_messages(messages)
-        mapped_model = MODEL_MAPPING.get(model, "gpt-6-astra")
+        mapped_model = map_model(model)
 
         sb_url, sb_token = await self.ensure_sandbox_synced(client, project_id)
 
         user_id = self._cached_user_id or str(uuid.uuid4())
+        eff = (reasoning_effort or "high").strip().lower()
+        if eff not in ("low", "medium", "high", "xhigh"):
+            eff = "high"
+
         payload = {
             "input": input_items,
             "metadata": {
                 "projectId": project_id,
                 "userId": user_id,
                 "model": mapped_model,
-                "reasoning_effort": "high",
+                "reasoning_effort": eff,
                 "frontend_origin": self.base_url,
                 "sandbox_url": sb_url,
                 "sandbox_token": sb_token

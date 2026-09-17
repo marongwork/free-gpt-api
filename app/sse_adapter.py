@@ -46,7 +46,8 @@ async def stream_chat_completion(
     prism_client: PrismClient,
     messages: List[Dict[str, Any]],
     model: str,
-    tools: Optional[List[Dict[str, Any]]] = None
+    tools: Optional[List[Dict[str, Any]]] = None,
+    reasoning_effort: Optional[str] = None
 ) -> AsyncGenerator[str, None]:
     """生成符合 OpenAI SSE 规范的流式数据"""
     completion_id = f"chatcmpl-prism-{uuid.uuid4().hex[:12]}"
@@ -62,7 +63,8 @@ async def stream_chat_completion(
             project_id=project_id,
             messages=messages,
             model=model,
-            tools=tools
+            tools=tools,
+            reasoning_effort=reasoning_effort
         )
 
         # 发送起始角色块
@@ -161,7 +163,8 @@ async def non_stream_chat_completion(
     prism_client: PrismClient,
     messages: List[Dict[str, Any]],
     model: str,
-    tools: Optional[List[Dict[str, Any]]] = None
+    tools: Optional[List[Dict[str, Any]]] = None,
+    reasoning_effort: Optional[str] = None
 ) -> ChatCompletionResponse:
     """非流式聚合返回"""
     completion_id = f"chatcmpl-prism-{uuid.uuid4().hex[:12]}"
@@ -169,7 +172,13 @@ async def non_stream_chat_completion(
     full_content = ""
     full_thought = ""
 
-    async for sse_item in stream_chat_completion(prism_client, messages, model, tools):
+    async for sse_item in stream_chat_completion(
+        prism_client=prism_client,
+        messages=messages,
+        model=model,
+        tools=tools,
+        reasoning_effort=reasoning_effort
+    ):
         if not sse_item.startswith("data: ") or sse_item.strip() == "data: [DONE]":
             continue
         try:

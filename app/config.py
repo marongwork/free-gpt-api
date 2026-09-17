@@ -31,9 +31,16 @@ class Settings:
     DEFAULT_MODEL: str = os.getenv("DEFAULT_MODEL", "o1-astra-xhigh")
     SUPPORTED_MODELS: List[str] = [
         "o1-astra-xhigh",
+        "01-astra-xhigh",
         "o1-high",
+        "01-high",
         "o3-high",
+        "03-high",
         "o1-preview",
+        "01-preview",
+        "gpt-6-astra",
+        "gpt-5.6-terra",
+        "gpt-5.6-sol",
         "gpt-5.2-prism",
         "gpt-4o",
         "astra-xhigh"
