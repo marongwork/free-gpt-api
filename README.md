@@ -1,4 +1,4 @@
-# ⚡️ Free-O1-API · 零计费无限 GPT Token！满血 o1-astra / o3 高推理反代服务
+# ⚡️ Free-GPT-API · 零计费无限 GPT Token！满血 o1-astra / o3 高推理反代服务
 
 > **零 API 计费账单 · 无限 GPT Token 配额 · 直通 o1 / Astra xhigh 满血深度思考**
 > 
@@ -29,8 +29,8 @@
 
 ```bash
 # 1. 克隆本仓库
-git clone https://github.com/marongwork/free-o1-api.git
-cd free-o1-api
+git clone https://github.com/marongwork/free-gpt-api.git
+cd free-gpt-api
 
 # 2. 复制配置文件模板
 cp .env.example .env
@@ -51,7 +51,7 @@ bash deploy.sh
 如果你已安装 Docker，也可直接使用 Compose 启动：
 
 ```bash
-cd free-o1-api
+cd free-gpt-api
 cp .env.example .env
 # 编辑配置
 vim .env
