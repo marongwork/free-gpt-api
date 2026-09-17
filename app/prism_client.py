@@ -11,22 +11,42 @@ logger = logging.getLogger("prism_client")
 
 # Prism internal model mapping
 MODEL_MAPPING = {
-    "o1-astra-xhigh": "gpt-5.6-terra",
-    "01-astra-xhigh": "gpt-5.6-terra",
-    "astra-xhigh": "gpt-5.6-terra",
-    "o1-high": "gpt-5.6-terra",
-    "01-high": "gpt-5.6-terra",
-    "o3-high": "gpt-5.6-terra",
-    "03-high": "gpt-5.6-terra",
-    "o1": "gpt-5.6-terra",
-    "01": "gpt-5.6-terra",
-    "o1-preview": "gpt-5.6-terra",
-    "01-preview": "gpt-5.6-terra",
-    "gpt-6-astra": "gpt-5.6-terra",
-    "gpt-5.6-terra": "gpt-5.6-terra",
-    "gpt-5.6-sol": "gpt-5.6-terra",
-    "gpt-4o": "gpt-5.6-terra",
-    "gpt-5.2-prism": "gpt-5.6-terra",
+    # --- GPT-6 Astra tier (highest) ---
+    "o1-astra-xhigh":   "gpt-6-astra",
+    "01-astra-xhigh":   "gpt-6-astra",
+    "astra-xhigh":      "gpt-6-astra",
+    "gpt-6-astra":      "gpt-6-astra",
+    "gpt-6.0-astra":    "gpt-6.0-astra",
+    "gpt-6-astra-high": "gpt-6-astra-high",
+    "astra":            "astra",
+    "o3-ultra":         "o3-ultra",
+    # --- High reasoning ---
+    "o1-high":          "gpt-5.6-sol",
+    "01-high":          "gpt-5.6-sol",
+    "o3-high":          "gpt-5.6-sol",
+    "03-high":          "gpt-5.6-sol",
+    "o1":               "gpt-5.6-sol",
+    "01":               "gpt-5.6-sol",
+    "o1-preview":       "gpt-5.6-sol",
+    "01-preview":       "gpt-5.6-sol",
+    # --- Mid tier ---
+    "gpt-5.9-astra":    "gpt-5.9-astra",
+    "gpt-5.8-astra":    "gpt-5.8-astra",
+    "gpt-5.7-astra":    "gpt-5.7-astra",
+    "gpt-5.6-astra":    "gpt-5.6-astra",
+    "gpt-5.8":          "gpt-5.8",
+    "gpt-5.7":          "gpt-5.7",
+    "o3-mini":          "o3-mini",
+    "o4-mini":          "o4-mini",
+    "gpt-5.6-turbo":    "gpt-5.6-turbo",
+    # --- Base models (pass-through) ---
+    "gpt-5.6-terra":    "gpt-5.6-terra",
+    "gpt-5.6-sol":      "gpt-5.6-sol",
+    "gpt-4o":           "gpt-5.6-sol",
+    "gpt-5.2-prism":    "gpt-5.6-sol",
+    "gpt-5":            "gpt-5",
+    "gpt-5-astra":      "gpt-5-astra",
+    "gpt-6-mini":       "gpt-6-mini",
 }
 
 def map_model(model_name: Optional[str]) -> str:
@@ -41,7 +61,7 @@ def map_model(model_name: Optional[str]) -> str:
         key = "o3" + key[2:]
         if key in MODEL_MAPPING:
             return MODEL_MAPPING[key]
-    return "gpt-5.6-terra"
+    return "gpt-6.0-astra"
 
 _GLOBAL_SANDBOX_CACHE: Dict[str, Any] = {}
 _SANDBOX_LOCK = asyncio.Lock()
@@ -340,7 +360,7 @@ class PrismClient:
             "request_id": request_id,
             "turn_state": turn_state
         }
-        resp = await client.post(url, json=payload, headers=self._get_headers(), timeout=30.0)
+        resp = await client.post(url, json=payload, headers=self._get_headers(), timeout=120.0)
         if resp.status_code != 200:
             raise RuntimeError(f"Prism poll status failed ({resp.status_code}): {resp.text}")
         return resp.json()
