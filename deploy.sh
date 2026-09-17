@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# OpenAI Prism 反代服务首尔服务器一键部署脚本
+# OpenAI Prism 满血高推理反代一键部署脚本
 # 适用系统: Ubuntu 20.04/22.04/24.04, Debian 11/12, CentOS 7/8/9
 # ==============================================================================
 
@@ -90,7 +90,7 @@ sleep 3
 HEALTH_CHECK=$(curl -s http://127.0.0.1/health || curl -s http://127.0.0.1:8000/health || echo "FAIL")
 
 if echo "$HEALTH_CHECK" | grep -q "online"; then
-    SERVER_IP=$(curl -s https://api.ipify.org || echo "您的首尔服务器IP")
+    SERVER_IP=$(curl -s https://api.ipify.org || echo "你的服务器IP")
     PROXY_KEY=$(grep "PROXY_API_KEY=" .env | cut -d '=' -f2)
     echo -e ""
     echo -e "${GREEN}======================================================${NC}"
